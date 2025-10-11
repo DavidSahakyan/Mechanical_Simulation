@@ -1,4 +1,5 @@
 #include <math.h>
+#include <iostream>
 
 #include "System.h"
 
@@ -176,23 +177,23 @@ void System::handle_collisions()
             if(calculate_distance(this -> object_list[i] -> get_coord(), this -> object_list[j] -> get_coord()) <=
                                   this -> object_list[i] -> get_characteristic_size() + this -> object_list[j] -> get_characteristic_size())
             {
-                float temp_vx_i = (2 * this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().x + 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[i] -> get_vel().x -
+                float temp_vx_i = (2 * this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().x -
+                                       this -> object_list[j] -> get_mass() * this -> object_list[i] -> get_vel().x +
                                        this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().x) / 
                                       (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
 
-                float temp_vx_j = (2 * this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().x + 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().x -
+                float temp_vx_j = (2 * this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().x - 
+                                       this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().x +
                                        this -> object_list[i] -> get_mass() * this -> object_list[j] -> get_vel().x) / 
                                       (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
 
-                float temp_vy_i = (2 * this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().y + 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[i] -> get_vel().y -
+                float temp_vy_i = (2 * this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().y - 
+                                       this -> object_list[j] -> get_mass() * this -> object_list[i] -> get_vel().y +
                                        this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().y) / 
                                       (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
 
-                float temp_vy_j = (2 * this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().y + 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().y -
+                float temp_vy_j = (2 * this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().y - 
+                                       this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().y +
                                        this -> object_list[i] -> get_mass() * this -> object_list[j] -> get_vel().y) / 
                                       (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
                 

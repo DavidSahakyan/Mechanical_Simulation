@@ -15,7 +15,7 @@ int main() {
     System* system = System::get_singleton();
         
     sphere* s1 = new sphere({301, 740},  {0, -50}, {0, 0}, 100,  BLUE, 10);
-    sphere* s2 = new sphere({301, 120},  {0, 0},   {0, 0}, 10000,  BLUE, 10);
+    sphere* s2 = new sphere({301, 120},  {0, 0},   {0, 0}, 100,  BLUE, 10);
     // sphere* s3 = new sphere({900, 510}, {0, 0}, {0, 0}, 1,  BLUE, 10);
     // sphere* s4 = new sphere({750, 740}, {0, 0},  {0, 0}, 1,  BLUE, 10);
     
