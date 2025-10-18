@@ -142,6 +142,11 @@ void System::update_system()
     }
 }
 
+uint64_t System::get_collision_number()
+{
+    return this -> collision_number;    
+}
+
 void System::handle_collisions()
 {
     for(int i = 0; i < this -> object_list.size(); ++i)
@@ -150,22 +155,26 @@ void System::handle_collisions()
         {
             this -> object_list[i] -> set_vel(-abs(this -> object_list[i] -> get_vel().x), 
                                                    this -> object_list[i] -> get_vel().y);
+            ++this -> collision_number;
         } 
         else if(this -> object_list[i] -> get_coord().x - this -> object_list[i] -> get_characteristic_size() <= 0)
         {
             this -> object_list[i] -> set_vel(abs(this -> object_list[i] -> get_vel().x), 
                                                   this -> object_list[i] -> get_vel().y);
+            ++this -> collision_number;
         }
 
         if(this -> object_list[i] -> get_coord().y + this -> object_list[i] -> get_characteristic_size() >= GetMonitorHeight(0))
         {
             this -> object_list[i] -> set_vel(this -> object_list[i] -> get_vel().x, 
                                          -abs(this -> object_list[i] -> get_vel().y));
+            ++this -> collision_number;
         }
         else if(this -> object_list[i] -> get_coord().y - this -> object_list[i] -> get_characteristic_size() <= 0)
         {
             this -> object_list[i] -> set_vel(this -> object_list[i] -> get_vel().x, 
                                           abs(this -> object_list[i] -> get_vel().y));
+            ++this -> collision_number;
         }
 
         if(i == this -> object_list.size() - 1)
@@ -176,29 +185,43 @@ void System::handle_collisions()
         {
             if(calculate_distance(this -> object_list[i] -> get_coord(), this -> object_list[j] -> get_coord()) <=
                                   this -> object_list[i] -> get_characteristic_size() + this -> object_list[j] -> get_characteristic_size())
-            {
-                float temp_vx_i = (2 * this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().x -
-                                       this -> object_list[j] -> get_mass() * this -> object_list[i] -> get_vel().x +
-                                       this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().x) / 
-                                      (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
+            {             
+                float vx_i = ((this -> object_list[i] -> get_mass() - this -> object_list[j] -> get_mass()) / 
+                              (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass())) * 
+                               this -> object_list[i] -> get_vel().x +
+                              (this -> object_list[j] -> get_mass() * 2 / 
+                              (this -> object_list[i] -> get_mass() + 
+                               this -> object_list[j] -> get_mass())) * 
+                               this -> object_list[j] -> get_vel().x;
 
-                float temp_vx_j = (2 * this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().x - 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().x +
-                                       this -> object_list[i] -> get_mass() * this -> object_list[j] -> get_vel().x) / 
-                                      (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
+                float vx_j = ((this -> object_list[j] -> get_mass() - this -> object_list[i] -> get_mass()) / 
+                              (this -> object_list[j] -> get_mass() + this -> object_list[i] -> get_mass())) * 
+                               this -> object_list[j] -> get_vel().x +
+                              (this -> object_list[i] -> get_mass() * 2 / 
+                              (this -> object_list[j] -> get_mass() + 
+                               this -> object_list[i] -> get_mass())) * 
+                               this -> object_list[i] -> get_vel().x;
 
-                float temp_vy_i = (2 * this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().y - 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[i] -> get_vel().y +
-                                       this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().y) / 
-                                      (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
+                float vy_i = ((this -> object_list[i] -> get_mass() - this -> object_list[j] -> get_mass()) / 
+                              (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass())) * 
+                               this -> object_list[i] -> get_vel().y +
+                              (this -> object_list[j] -> get_mass() * 2 / 
+                              (this -> object_list[i] -> get_mass() + 
+                               this -> object_list[j] -> get_mass())) * 
+                               this -> object_list[j] -> get_vel().y;
 
-                float temp_vy_j = (2 * this -> object_list[i] -> get_mass() * this -> object_list[i] -> get_vel().y - 
-                                       this -> object_list[j] -> get_mass() * this -> object_list[j] -> get_vel().y +
-                                       this -> object_list[i] -> get_mass() * this -> object_list[j] -> get_vel().y) / 
-                                      (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass());
-                
-                this -> object_list[i] -> set_vel(temp_vx_i, temp_vy_i);
-                this -> object_list[j] -> set_vel(temp_vx_j, temp_vy_j);
+
+                float vy_j = ((this -> object_list[j] -> get_mass() - this -> object_list[i] -> get_mass()) / 
+                              (this -> object_list[j] -> get_mass() + this -> object_list[i] -> get_mass())) * 
+                               this -> object_list[j] -> get_vel().y +
+                              (this -> object_list[i] -> get_mass() * 2 / 
+                              (this -> object_list[j] -> get_mass() + 
+                               this -> object_list[i] -> get_mass())) * 
+                               this -> object_list[i] -> get_vel().y;
+
+                this -> object_list[i] -> set_vel(vx_i, vy_i);
+                this -> object_list[j] -> set_vel(vx_j, vy_j);
+                ++this -> collision_number;
             }
         }        
     }

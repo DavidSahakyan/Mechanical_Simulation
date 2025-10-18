@@ -2,6 +2,7 @@
 #define SYSTEM
 #include "Sphere.h"
 #include <vector>
+#include <cstdint>
 
 class System{
 public:
@@ -22,14 +23,14 @@ public:
     float calculate_cos_with_horizon(const Vector2& point1, const Vector2& point2);
     float calculate_sin_with_horizon(const Vector2& point1, const Vector2& point2);
 
-
+    uint64_t get_collision_number();
 private:
     System();
     System(const System&) = delete;
     std::vector<object*> object_list = {};
     Vector2 global_acceleration = {0, 0};
     const float dt = 0.001;
-
+    uint64_t collision_number = 0;
 };
 
 #endif
