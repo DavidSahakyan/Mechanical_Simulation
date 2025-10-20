@@ -139,7 +139,7 @@ void System::update_system()
 {
     for(int i = 0; i < this -> object_list.size(); ++i)
     {
-        this -> object_list[i] -> set_force(0, 0);    
+        this -> object_list[i] -> set_force(0, 0);
     }
     
     handle_collisions();
@@ -237,4 +237,13 @@ void System::handle_collisions()
         }        
     }
 }
+
+System::~System()
+{
+    for(auto i: this -> object_list)
+    {
+        delete(i);
+    }
+}
+
 

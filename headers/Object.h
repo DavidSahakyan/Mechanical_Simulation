@@ -7,12 +7,10 @@ class object{
 public:
     object(const float& x,  const float& y, 
            const float& vx, const float& vy,
-           const float& fx, const float& fy,
            const float& m,  const Color& color);
     
     object(const Vector2& coord, 
            const Vector2& vel, 
-           const Vector2& force,
            const float& m, 
            const Color& color);
     

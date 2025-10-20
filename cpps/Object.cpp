@@ -3,10 +3,8 @@
 
 object::object(const float& x, const float& y, 
                const float& vx,const float& vy, 
-               const float& fx,const float& fy, 
                const float& m, const Color& color) : coord({x, y}),
                                                      speed({vx, vy}), 
-                                                     force({fx, fy}),
                                                      mass(m),
                                                      col(color) 
 {
@@ -14,11 +12,9 @@ object::object(const float& x, const float& y,
 
 object::object(const Vector2& coord, 
                const Vector2& vel, 
-               const Vector2& force, 
                const float& m, 
                const Color& color) : coord(coord),
                                      speed(vel), 
-                                     force(force),
                                      mass(m),
                                      col(color) 
 {
