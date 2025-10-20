@@ -26,6 +26,17 @@ void System::add_bodies(const std::vector<object*>& obj_list)
     }
 } 
 
+void System::set_global_acceleration(const Vector2& acceleration)
+{
+    this -> global_acceleration = acceleration;
+}
+
+void System::set_global_acceleration(const float& acceleration_x, const float& acceleration_y)
+{
+    this -> global_acceleration = Vector2{acceleration_x, acceleration_y};
+}
+
+
 System* System::get_singleton()
 {
     if(s == nullptr)

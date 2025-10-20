@@ -12,17 +12,21 @@
 int main() {
     InitWindow(1280, 720, "Shapes");
     ToggleFullscreen();
+    
     System* system = System::get_singleton();
-        
-    sphere* s1 = new sphere({600, 500},  {0, -20}, {0, 0}, 10000,  BLUE, 10);
-    sphere* s2 = new sphere({600, 250},  {0, 0},   {0, 0}, 1,  BLUE, 10);
-    // sphere* s3 = new sphere({900, 510}, {0, 0}, {0, 0}, 1,  BLUE, 10);
-    // sphere* s4 = new sphere({750, 740}, {0, 0},  {0, 0}, 1,  BLUE, 10);
+
+    sphere* s1 = new sphere({600, 1080},  {0, 0}, {0, 0}, 100,  BLUE, 20);
+    sphere* s2 = new sphere({600, 500},  {0, 0},   {0, 0}, 1,  BLUE, 10);
+
+    // sphere* s3 = new sphere({900, 510}, {0, 20}, {0, 0}, 1000,  BLUE, 10);
+    // sphere* s4 = new sphere({750, 740}, {50, 0},  {0, 0}, 1,  BLUE, 10);
     
     system -> add_body(s1);
     system -> add_body(s2);
     // system -> add_body(s3);
     // system -> add_body(s4);
+
+    system -> set_global_acceleration(0, 9.8);
 
     while(!WindowShouldClose()){
         BeginDrawing();

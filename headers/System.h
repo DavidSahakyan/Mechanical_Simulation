@@ -10,6 +10,8 @@ public:
     void add_body(object* object);
     void add_body(object& object);
     void add_bodies(const std::vector<object*>& object_list);
+    void set_global_acceleration(const Vector2& acceleration);
+    void set_global_acceleration(const float& acceleration_x, const float& acceleration_y);
 
     void update_system();
     void calculate_forces();
