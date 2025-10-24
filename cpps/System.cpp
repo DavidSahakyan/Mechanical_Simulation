@@ -201,64 +201,61 @@ void System::handle_collisions()
         {
             break;
         }
-        for (int i = 0; i < this -> object_list.size(); ++i)
+        for (int j = i + 1; j < this -> object_list.size(); ++j)
         {
-            for (int j = i + 1; j < this -> object_list.size(); ++j)
+            float dist = calculate_distance(this -> object_list[i] -> get_coord(), 
+                                            this -> object_list[j] -> get_coord()); 
+            
+            if(dist <= this -> object_list[i] -> get_characteristic_size() + 
+                       this -> object_list[j] -> get_characteristic_size())
             {
-                float dist = calculate_distance(this -> object_list[i] -> get_coord(), 
-                                                this -> object_list[j] -> get_coord()); 
+                float cos_i = (this -> object_list[i] -> get_coord().x -
+                               this -> object_list[j] -> get_coord().x) / dist;  
+            
+                float sin_i = (this -> object_list[i] -> get_coord().y -
+                               this -> object_list[j] -> get_coord().y) / dist;
+
+                float cos_j = (this -> object_list[j] -> get_coord().x -
+                               this -> object_list[i] -> get_coord().x) / dist;
                 
-                if(dist <= this -> object_list[i] -> get_characteristic_size() + 
-                           this -> object_list[j] -> get_characteristic_size())
-                {
-                    float cos_i = (this -> object_list[i] -> get_coord().x -
-                                   this -> object_list[j] -> get_coord().x) / dist;  
+                float sin_j = (this -> object_list[j] -> get_coord().y -
+                               this -> object_list[i] -> get_coord().y) / dist;
+
+                float vn_i = this -> object_list[i] -> get_vel().x * cos_i + 
+                             this -> object_list[i] -> get_vel().y * sin_i;   
+
+                float vt_i = this -> object_list[i] -> get_vel().y * cos_i - 
+                             this -> object_list[i] -> get_vel().x * sin_i;
+
+                float vn_j = this -> object_list[j] -> get_vel().x * cos_j + 
+                             this -> object_list[j] -> get_vel().y * sin_j;   
+
+                float vt_j = this -> object_list[j] -> get_vel().y * cos_j - 
+                            this -> object_list[j] -> get_vel().x * sin_j;
+
+                float vn_i_after_collision = -(2 * (this -> object_list[j] -> get_mass()) / 
+                                                   (this -> object_list[j] -> get_mass() + 
+                                                   (this -> object_list[i] -> get_mass())) * vn_j) + 
+                                                  ((this -> object_list[i] -> get_mass() - 
+                                                    this -> object_list[j] -> get_mass()) /
+                                                   (this -> object_list[i] -> get_mass() + 
+                                                    this -> object_list[j] -> get_mass())) * vn_i;     
+
+                float vn_j_after_collision = -(2 * (this -> object_list[i] -> get_mass()) / 
+                                                   (this -> object_list[i] -> get_mass() + 
+                                                   (this -> object_list[j] -> get_mass())) * vn_i) + 
+                                                  ((this -> object_list[j] -> get_mass() - 
+                                                    this -> object_list[i] -> get_mass()) /
+                                                   (this -> object_list[j] -> get_mass() + 
+                                                    this -> object_list[i] -> get_mass())) * vn_j;
                 
-                    float sin_i = (this -> object_list[i] -> get_coord().y -
-                                   this -> object_list[j] -> get_coord().y) / dist;
+                this -> object_list[i] -> set_vel(vn_i_after_collision * cos_i - vt_i * sin_i, 
+                                                  vn_i_after_collision * sin_i + vt_i * cos_i);
 
-                    float cos_j = (this -> object_list[j] -> get_coord().x -
-                                   this -> object_list[i] -> get_coord().x) / dist;
-                    
-                    float sin_j = (this -> object_list[j] -> get_coord().y -
-                                   this -> object_list[i] -> get_coord().y) / dist;
-
-                    float vn_i = this -> object_list[i] -> get_vel().x * cos_i + 
-                                 this -> object_list[i] -> get_vel().y * sin_i;   
-
-                    float vt_i = this -> object_list[i] -> get_vel().y * cos_i - 
-                                 this -> object_list[i] -> get_vel().x * sin_i;
-
-                    float vn_j = this -> object_list[j] -> get_vel().x * cos_j + 
-                                 this -> object_list[j] -> get_vel().y * sin_j;   
-
-                    float vt_j = this -> object_list[j] -> get_vel().y * cos_j - 
-                                 this -> object_list[j] -> get_vel().x * sin_j;
-
-                    float vn_i_after_collision = -(2 * (this -> object_list[j] -> get_mass()) / 
-                                                       (this -> object_list[j] -> get_mass() + 
-                                                       (this -> object_list[i] -> get_mass())) * vn_j) + 
-                                                      ((this -> object_list[i] -> get_mass() - 
-                                                        this -> object_list[j] -> get_mass()) /
-                                                       (this -> object_list[i] -> get_mass() + 
-                                                        this -> object_list[j] -> get_mass())) * vn_i;     
-
-                    float vn_j_after_collision = -(2 * (this -> object_list[i] -> get_mass()) / 
-                                                       (this -> object_list[i] -> get_mass() + 
-                                                       (this -> object_list[j] -> get_mass())) * vn_i) + 
-                                                      ((this -> object_list[j] -> get_mass() - 
-                                                        this -> object_list[i] -> get_mass()) /
-                                                       (this -> object_list[j] -> get_mass() + 
-                                                        this -> object_list[i] -> get_mass())) * vn_j;
-                    
-                    this -> object_list[i] -> set_vel(vn_i_after_collision * cos_i - vt_i * sin_i, 
-                                                      vn_i_after_collision * sin_i + vt_i * cos_i);
-
-                    this -> object_list[j] -> set_vel(vn_j_after_collision * cos_j - vt_j * sin_j, 
-                                                      vn_j_after_collision * sin_j + vt_j * cos_j);    
-                
-                    ++this -> collision_number;
-                }
+                this -> object_list[j] -> set_vel(vn_j_after_collision * cos_j - vt_j * sin_j, 
+                                                  vn_j_after_collision * sin_j + vt_j * cos_j);    
+          
+                ++this -> collision_number;
             }
         }        
     }
