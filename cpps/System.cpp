@@ -10,19 +10,28 @@ System::System()
 
 void System::add_body(object* obj)
 {   
-    this -> object_list.push_back(obj);
+    if(check_validity(obj))
+    {
+        this -> object_list.push_back(obj);
+    }
 }
 
 void System::add_body(object& obj)
 {
-    this -> add_body(&obj);
+    if(check_validity(&obj))
+    {
+        this -> add_body(&obj);
+    }
 }
 
 void System::add_bodies(const std::vector<object*>& obj_list)
 {
     for(auto i: obj_list)
     {
-        this -> add_body(i);
+        if(check_validity(i))
+        {
+            this -> add_body(i);
+        }
     }
 } 
 
@@ -192,47 +201,64 @@ void System::handle_collisions()
         {
             break;
         }
-        for(int j = i + 1; j < this -> object_list.size(); ++j)
+        for (int i = 0; i < this -> object_list.size(); ++i)
         {
-            if(calculate_distance(this -> object_list[i] -> get_coord(), this -> object_list[j] -> get_coord()) <=
-                                  this -> object_list[i] -> get_characteristic_size() + this -> object_list[j] -> get_characteristic_size())
-            {             
-                float vx_i = ((this -> object_list[i] -> get_mass() - this -> object_list[j] -> get_mass()) / 
-                              (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass())) * 
-                               this -> object_list[i] -> get_vel().x +
-                              (this -> object_list[j] -> get_mass() * 2 / 
-                              (this -> object_list[i] -> get_mass() + 
-                               this -> object_list[j] -> get_mass())) * 
-                               this -> object_list[j] -> get_vel().x;
+            for (int j = i + 1; j < this -> object_list.size(); ++j)
+            {
+                float dist = calculate_distance(this -> object_list[i] -> get_coord(), 
+                                                this -> object_list[j] -> get_coord()); 
+                
+                if(dist <= this -> object_list[i] -> get_characteristic_size() + 
+                           this -> object_list[j] -> get_characteristic_size())
+                {
+                    float cos_i = (this -> object_list[i] -> get_coord().x -
+                                   this -> object_list[j] -> get_coord().x) / dist;  
+                
+                    float sin_i = (this -> object_list[i] -> get_coord().y -
+                                   this -> object_list[j] -> get_coord().y) / dist;
 
-                float vx_j = ((this -> object_list[j] -> get_mass() - this -> object_list[i] -> get_mass()) / 
-                              (this -> object_list[j] -> get_mass() + this -> object_list[i] -> get_mass())) * 
-                               this -> object_list[j] -> get_vel().x +
-                              (this -> object_list[i] -> get_mass() * 2 / 
-                              (this -> object_list[j] -> get_mass() + 
-                               this -> object_list[i] -> get_mass())) * 
-                               this -> object_list[i] -> get_vel().x;
+                    float cos_j = (this -> object_list[j] -> get_coord().x -
+                                   this -> object_list[i] -> get_coord().x) / dist;
+                    
+                    float sin_j = (this -> object_list[j] -> get_coord().y -
+                                   this -> object_list[i] -> get_coord().y) / dist;
 
-                float vy_i = ((this -> object_list[i] -> get_mass() - this -> object_list[j] -> get_mass()) / 
-                              (this -> object_list[i] -> get_mass() + this -> object_list[j] -> get_mass())) * 
-                               this -> object_list[i] -> get_vel().y +
-                              (this -> object_list[j] -> get_mass() * 2 / 
-                              (this -> object_list[i] -> get_mass() + 
-                               this -> object_list[j] -> get_mass())) * 
-                               this -> object_list[j] -> get_vel().y;
+                    float vn_i = this -> object_list[i] -> get_vel().x * cos_i + 
+                                 this -> object_list[i] -> get_vel().y * sin_i;   
 
+                    float vt_i = this -> object_list[i] -> get_vel().y * cos_i - 
+                                 this -> object_list[i] -> get_vel().x * sin_i;
 
-                float vy_j = ((this -> object_list[j] -> get_mass() - this -> object_list[i] -> get_mass()) / 
-                              (this -> object_list[j] -> get_mass() + this -> object_list[i] -> get_mass())) * 
-                               this -> object_list[j] -> get_vel().y +
-                              (this -> object_list[i] -> get_mass() * 2 / 
-                              (this -> object_list[j] -> get_mass() + 
-                               this -> object_list[i] -> get_mass())) * 
-                               this -> object_list[i] -> get_vel().y;
+                    float vn_j = this -> object_list[j] -> get_vel().x * cos_j + 
+                                 this -> object_list[j] -> get_vel().y * sin_j;   
 
-                this -> object_list[i] -> set_vel(vx_i, vy_i);
-                this -> object_list[j] -> set_vel(vx_j, vy_j);
-                ++this -> collision_number;
+                    float vt_j = this -> object_list[j] -> get_vel().y * cos_j - 
+                                 this -> object_list[j] -> get_vel().x * sin_j;
+
+                    float vn_i_after_collision = -(2 * (this -> object_list[j] -> get_mass()) / 
+                                                       (this -> object_list[j] -> get_mass() + 
+                                                       (this -> object_list[i] -> get_mass())) * vn_j) + 
+                                                      ((this -> object_list[i] -> get_mass() - 
+                                                        this -> object_list[j] -> get_mass()) /
+                                                       (this -> object_list[i] -> get_mass() + 
+                                                        this -> object_list[j] -> get_mass())) * vn_i;     
+
+                    float vn_j_after_collision = -(2 * (this -> object_list[i] -> get_mass()) / 
+                                                       (this -> object_list[i] -> get_mass() + 
+                                                       (this -> object_list[j] -> get_mass())) * vn_i) + 
+                                                      ((this -> object_list[j] -> get_mass() - 
+                                                        this -> object_list[i] -> get_mass()) /
+                                                       (this -> object_list[j] -> get_mass() + 
+                                                        this -> object_list[i] -> get_mass())) * vn_j;
+                    
+                    this -> object_list[i] -> set_vel(vn_i_after_collision * cos_i - vt_i * sin_i, 
+                                                      vn_i_after_collision * sin_i + vt_i * cos_i);
+
+                    this -> object_list[j] -> set_vel(vn_j_after_collision * cos_j - vt_j * sin_j, 
+                                                      vn_j_after_collision * sin_j + vt_j * cos_j);    
+                
+                    ++this -> collision_number;
+                }
             }
         }        
     }
@@ -247,3 +273,32 @@ System::~System()
 }
 
 
+bool System::check_validity(object* obj)
+{
+    if(obj -> get_mass() < 0)
+    {
+        std::cerr << "Body has negative mass parameter\n";
+        return false;
+    }
+
+    if(obj -> get_coord().x < obj -> get_characteristic_size() || 
+       obj -> get_coord().y < obj -> get_characteristic_size() || 
+       obj -> get_coord().x > GetScreenWidth() - obj-> get_characteristic_size() || 
+       obj -> get_coord().x > GetScreenWidth() - obj-> get_characteristic_size())
+    {
+        std::cerr << "Body No " << this -> object_list.size() << " is initialized in the wall\n";
+        return false;
+    }
+
+    for(int i = 0; i < this -> object_list.size(); ++i)
+    {
+        if(calculate_distance(this -> object_list[i] -> get_coord(), obj -> get_coord()) < 
+                              this -> object_list[i] -> get_characteristic_size() + obj -> get_characteristic_size())
+        {
+            std::cerr << "Body No " << this -> object_list.size() << " is initialized inside the body No " << i << '\n';
+            return false;
+        }
+    }
+
+    return true;
+}

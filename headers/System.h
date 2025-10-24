@@ -23,6 +23,7 @@ private:
     void calculate_global_gravitational_forces();
     void calculate_potential_electromagnetic_field_forces();
     void handle_collisions();    
+    bool check_validity(object* obj);
     float calculate_distance(const Vector2& point1, const Vector2& point2);
     float calculate_cos_with_horizon(const Vector2& point1, const Vector2& point2);
     float calculate_sin_with_horizon(const Vector2& point1, const Vector2& point2);
