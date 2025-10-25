@@ -20,6 +20,9 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     Vector2 acceleration{0, 0};
 
     bool body_created = false;
+    bool body_point_connection_created = false;
+    bool body_body_connection_created = false;
+    
     float mass = 1;
     float initial_x  = 0;
     float initial_y  = 0;
@@ -27,6 +30,12 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     float initial_vy = 0;
     float characteristic_size = 10;
     Color c = BLUE;        
+    
+    bool connection_is_hard = true;    
+    unsigned int connection_body_num_1 = -1;
+    unsigned int connection_body_num_2 = -1;
+    float connection_point_x = 0;
+    float connection_point_y = 0;
 
     uint line_counter = 0;
     std::string line;
@@ -41,22 +50,49 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
 
         line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
 
-        if(line == "NEWBODY" && body_created)
+        if(line == "BODY" || line == "BODYCONNECTION" || line == "POINTCONNECTION")
         {
-            system -> add_body(new sphere(initial_x, initial_y, 
-                                          initial_vx, initial_vy, 
-                                          mass, c, characteristic_size));
-            float mass = 1;
-            float initial_x  = 0;
-            float initial_y  = 0;
-            float initial_vx = 0;
-            float initial_vy = 0;
-            float characteristic_size = 10;
-            Color c = BLUE;    
-            continue; 
-        }
-        else if(line == "NEWBODY" && !body_created)
-        {
+            if(body_created)
+            {
+                system -> add_body(new sphere(initial_x, initial_y, 
+                                              initial_vx, initial_vy, 
+                                              mass, c, characteristic_size));
+                mass = 1;
+                initial_x  = 0;
+                initial_y  = 0;
+                initial_vx = 0;
+                initial_vy = 0;
+                characteristic_size = 10;
+                c = BLUE;    
+            } 
+
+            if(body_body_connection_created)
+            {
+                system -> add_connection(connection_body_num_1, 
+                                         connection_body_num_2, 
+                                         connection_is_hard);
+                
+                connection_is_hard = true;    
+                connection_body_num_1 = -1;
+                connection_body_num_2 = -1;
+            }
+
+            if(body_point_connection_created)
+            {
+                system -> add_connection(connection_body_num_1, 
+                                         connection_point_x, 
+                                         connection_point_y, 
+                                         connection_is_hard);
+                
+                connection_is_hard = true;    
+                connection_body_num_1 = -1;
+                connection_point_x = 0;    
+                connection_point_y = 0;    
+            }
+
+            body_created = (line == "BODY");
+            body_body_connection_created = (line == "BODYCONNECTION");
+            body_body_connection_created = (line == "POINTCONNECTION");
             continue;
         }
 
@@ -82,27 +118,22 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         else if(variable == "MASS")
         {
             mass = std::stof(line.substr(sign_pos + 1, line.size()));
-            body_created = true;
         }
         else if(variable == "INITIAL_X")
         {
             initial_x = std::stof(line.substr(sign_pos + 1, line.size()));
-            body_created = true;
         }
         else if(variable == "INITIAL_Y")
         {
             initial_y = std::stof(line.substr(sign_pos + 1, line.size()));
-            body_created = true;
         }
         else if(variable == "INITIAL_VX")
         {
             initial_vx = std::stof(line.substr(sign_pos + 1, line.size()));
-            body_created = true;
         }
         else if(variable == "INITIAL_VY")
         {
             initial_vy = std::stof(line.substr(sign_pos + 1, line.size()));
-            body_created = true;
         }
         else if(variable == "CHARACTERISTIC_SIZE")
         {
@@ -123,6 +154,18 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         else if(variable == "COLOR_A")
         {
             c.a = std::stoi(line.substr(sign_pos + 1, line.size()));
+        }
+        else if(variable == "OBJECT_NUM_1")
+        {
+            connection_body_num_1 = std::stoi(line.substr(sign_pos + 1, line.size()));
+        }
+        else if(variable == "OBJECT_NUM_2")
+        {
+            connection_body_num_2 = std::stoi(line.substr(sign_pos + 1, line.size()));
+        }
+        else if(variable == "CONNECTION_IS_HARD")
+        {
+            connection_is_hard = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
         else
         {

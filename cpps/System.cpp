@@ -299,3 +299,87 @@ bool System::check_validity(object* obj)
 
     return true;
 }
+
+void System::add_hard_connection(object* obj_1, object* obj_2)
+{
+    if(this -> body_body_hard_connections.find(obj_1) == this -> body_body_hard_connections.end())
+    {
+        this -> body_body_hard_connections.insert({obj_1, {}});
+    }
+    this -> body_body_hard_connections.at(obj_1).insert(obj_2);
+
+    if(this -> body_body_hard_connections.find(obj_2) == this -> body_body_hard_connections.end())
+    {
+        this -> body_body_hard_connections.insert({obj_2, {}});
+    }
+    this -> body_body_hard_connections.at(obj_2).insert(obj_1);
+}
+
+void System::add_hard_connection(object* obj_1, Vector2 point)
+{
+    if(this -> body_point_hard_connections.find(obj_1) != this -> body_point_hard_connections.end())
+    {
+        this -> body_point_hard_connections.insert({obj_1, {}});
+    }
+    this -> body_point_hard_connections.at(obj_1).push_back(point);
+}
+
+void System::add_soft_connection(object* obj_1, object* obj_2)
+{
+    if(this -> body_body_soft_connections.find(obj_1) == this -> body_body_soft_connections.end())
+    {
+        this -> body_body_soft_connections.insert({obj_1, {}});
+    }
+    this -> body_body_soft_connections.at(obj_1).insert(obj_2);
+
+    if(this -> body_body_soft_connections.find(obj_2) == this -> body_body_soft_connections.end())
+    {
+        this -> body_body_soft_connections.insert({obj_2, {}});
+    }
+    this -> body_body_soft_connections.at(obj_2).insert(obj_1);
+}
+
+void System::add_soft_connection(object* obj_1, Vector2 point)
+{
+    if(this -> body_point_soft_connections.find(obj_1) == this -> body_point_soft_connections.end())
+    {
+        this -> body_point_soft_connections.insert({obj_1, {}});
+    }
+    this -> body_point_soft_connections.at(obj_1).push_back(point);
+}
+
+void System::add_connection(unsigned int body_num_1, unsigned int body_num_2, bool hard_connection = true)
+{
+    if(hard_connection && object_list.size() >= body_num_1 && 
+                          object_list.size() >= body_num_2)
+    {
+        this -> add_hard_connection(this -> object_list[body_num_1 - 1], 
+                                    this -> object_list[body_num_2 - 1]);
+            
+        return;    
+    }
+
+    if(!hard_connection && object_list.size() >= body_num_1 && 
+                           object_list.size() >= body_num_2)
+    {
+        this -> add_soft_connection(this -> object_list[body_num_1 - 1], 
+                                    this -> object_list[body_num_2 - 1]);
+    
+        return;
+    }
+
+    std::cerr << "Connection is set between at least one non-existant element\n";
+}
+
+void System::add_connection(unsigned int body_num, float point_x, float point_y, bool hard_connection = true)
+{
+    if(hard_connection && object_list.size() >= body_num)
+    {
+        this -> add_hard_connection(this -> object_list[body_num - 1], Vector2{point_x, point_y});
+    }
+
+    if(!hard_connection && object_list.size() >= body_num)
+    {
+        this -> add_soft_connection(this -> object_list[body_num - 1], Vector2{point_x, point_y});
+    }
+}
