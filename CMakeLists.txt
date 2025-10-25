@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(simulator cpps/simulation.cpp 
                          cpps/Sphere.cpp 
                          cpps/Object.cpp  
-                         cpps/System.cpp)
+                         cpps/System.cpp
+                         cpps/Connection.cpp)
 
 
 target_compile_definitions(simulator PUBLIC CONFIG_FILE_PATH=\"${CMAKE_SOURCE_DIR}/config_file.ini\")

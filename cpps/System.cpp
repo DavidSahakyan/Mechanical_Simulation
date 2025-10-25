@@ -160,6 +160,13 @@ void System::update_system()
         this -> object_list[i] -> move(this -> dt);
         this -> object_list[i] -> display();
     }
+    
+    // std::cout << this -> connection_list.size(); 
+
+    for(int i = 0; i < this -> connection_list.size(); ++i)
+    {
+        this -> connection_list[i] -> display();
+    }
 }
 
 uint64_t System::get_collision_number()
@@ -300,86 +307,46 @@ bool System::check_validity(object* obj)
     return true;
 }
 
-void System::add_hard_connection(object* obj_1, object* obj_2)
+void System::add_connection(object* obj1, object* obj2, float max_len)
 {
-    if(this -> body_body_hard_connections.find(obj_1) == this -> body_body_hard_connections.end())
-    {
-        this -> body_body_hard_connections.insert({obj_1, {}});
-    }
-    this -> body_body_hard_connections.at(obj_1).insert(obj_2);
-
-    if(this -> body_body_hard_connections.find(obj_2) == this -> body_body_hard_connections.end())
-    {
-        this -> body_body_hard_connections.insert({obj_2, {}});
-    }
-    this -> body_body_hard_connections.at(obj_2).insert(obj_1);
+    Connection* temp_connection = new Connection(obj1, obj2, max_len);
+    this -> connection_list.push_back(temp_connection);
 }
 
-void System::add_hard_connection(object* obj_1, Vector2 point)
+void System::add_connection(object* obj1, Vector2 point, float max_len)
 {
-    if(this -> body_point_hard_connections.find(obj_1) != this -> body_point_hard_connections.end())
-    {
-        this -> body_point_hard_connections.insert({obj_1, {}});
-    }
-    this -> body_point_hard_connections.at(obj_1).push_back(point);
+    Connection* temp_connection = new Connection(obj1, point, max_len);
+    this -> connection_list.push_back(temp_connection);
 }
 
-void System::add_soft_connection(object* obj_1, object* obj_2)
+void System::add_connection(unsigned int body_num_1, unsigned int body_num_2, float connection_max_len)
 {
-    if(this -> body_body_soft_connections.find(obj_1) == this -> body_body_soft_connections.end())
+    if(object_list.size() >= body_num_1 && 
+       object_list.size() >= body_num_2)
     {
-        this -> body_body_soft_connections.insert({obj_1, {}});
-    }
-    this -> body_body_soft_connections.at(obj_1).insert(obj_2);
-
-    if(this -> body_body_soft_connections.find(obj_2) == this -> body_body_soft_connections.end())
-    {
-        this -> body_body_soft_connections.insert({obj_2, {}});
-    }
-    this -> body_body_soft_connections.at(obj_2).insert(obj_1);
-}
-
-void System::add_soft_connection(object* obj_1, Vector2 point)
-{
-    if(this -> body_point_soft_connections.find(obj_1) == this -> body_point_soft_connections.end())
-    {
-        this -> body_point_soft_connections.insert({obj_1, {}});
-    }
-    this -> body_point_soft_connections.at(obj_1).push_back(point);
-}
-
-void System::add_connection(unsigned int body_num_1, unsigned int body_num_2, bool hard_connection = true)
-{
-    if(hard_connection && object_list.size() >= body_num_1 && 
-                          object_list.size() >= body_num_2)
-    {
-        this -> add_hard_connection(this -> object_list[body_num_1 - 1], 
-                                    this -> object_list[body_num_2 - 1]);
+        this -> add_connection(this -> object_list[body_num_1 - 1], 
+                               this -> object_list[body_num_2 - 1],
+                               connection_max_len);
             
         return;    
-    }
-
-    if(!hard_connection && object_list.size() >= body_num_1 && 
-                           object_list.size() >= body_num_2)
-    {
-        this -> add_soft_connection(this -> object_list[body_num_1 - 1], 
-                                    this -> object_list[body_num_2 - 1]);
-    
-        return;
     }
 
     std::cerr << "Connection is set between at least one non-existant element\n";
 }
 
-void System::add_connection(unsigned int body_num, float point_x, float point_y, bool hard_connection = true)
+void System::add_connection(unsigned int body_num, float point_x, float point_y, float connection_max_len)
 {
-    if(hard_connection && object_list.size() >= body_num)
+    if(object_list.size() >= body_num)
     {
-        this -> add_hard_connection(this -> object_list[body_num - 1], Vector2{point_x, point_y});
+        this -> add_connection(this -> object_list[body_num - 1], 
+                               Vector2{point_x, point_y}, 
+                               connection_max_len);
     }
+    
+    std::cerr << "Connection is set between at least one non-existant element\n";
+}
 
-    if(!hard_connection && object_list.size() >= body_num)
-    {
-        this -> add_soft_connection(this -> object_list[body_num - 1], Vector2{point_x, point_y});
-    }
+void System::handle_connections()
+{
+
 }

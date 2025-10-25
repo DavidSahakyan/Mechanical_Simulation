@@ -31,7 +31,7 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     float characteristic_size = 10;
     Color c = BLUE;        
     
-    bool connection_is_hard = true;    
+    float connection_max_len = 0; // 0 MEAN HARD CONNECTION, -1 MEAN DISTANCE AT THE INNITIALIZATION MOMENT   
     unsigned int connection_body_num_1 = -1;
     unsigned int connection_body_num_2 = -1;
     float connection_point_x = 0;
@@ -70,9 +70,9 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
             {
                 system -> add_connection(connection_body_num_1, 
                                          connection_body_num_2, 
-                                         connection_is_hard);
+                                         connection_max_len);
                 
-                connection_is_hard = true;    
+                connection_max_len = 0;    
                 connection_body_num_1 = -1;
                 connection_body_num_2 = -1;
             }
@@ -82,9 +82,9 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
                 system -> add_connection(connection_body_num_1, 
                                          connection_point_x, 
                                          connection_point_y, 
-                                         connection_is_hard);
+                                         connection_max_len);
                 
-                connection_is_hard = true;    
+                connection_max_len = 0;    
                 connection_body_num_1 = -1;
                 connection_point_x = 0;    
                 connection_point_y = 0;    
@@ -92,7 +92,7 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
 
             body_created = (line == "BODY");
             body_body_connection_created = (line == "BODYCONNECTION");
-            body_body_connection_created = (line == "POINTCONNECTION");
+            body_point_connection_created = (line == "POINTCONNECTION");
             continue;
         }
 
@@ -163,9 +163,9 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         {
             connection_body_num_2 = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
-        else if(variable == "CONNECTION_IS_HARD")
+        else if(variable == "MAX_LEN")
         {
-            connection_is_hard = std::stoi(line.substr(sign_pos + 1, line.size()));
+            connection_max_len = std::stof(line.substr(sign_pos + 1, line.size()));
         }
         else
         {
@@ -173,11 +173,27 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
             std::cout << "UNINTERPRETED VARIABLE NAME: " << variable << '\n';
         }
     }
+
     if(body_created)
     {
         system -> add_body(new sphere(initial_x, initial_y, 
                                       initial_vx, initial_vy, 
                                       mass, c, characteristic_size));
+    }
+
+    if(body_body_connection_created)
+    {
+        system -> add_connection(connection_body_num_1, 
+                                 connection_body_num_2, 
+                                 connection_max_len);
+    }
+
+    if(body_point_connection_created)
+    {
+        system -> add_connection(connection_body_num_1, 
+                                 connection_point_x, 
+                                 connection_point_y, 
+                                 connection_max_len);  
     }
     
     system -> set_global_acceleration(acceleration);
