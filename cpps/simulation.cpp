@@ -163,6 +163,14 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         {
             connection_body_num_2 = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
+        else if(variable == "CONNECTION_POINT_X")
+        {
+            connection_point_x = std::stoi(line.substr(sign_pos + 1, line.size()));
+        }
+        else if(variable == "CONNECTION_POINT_Y")
+        {
+            connection_point_y = std::stoi(line.substr(sign_pos + 1, line.size()));
+        }
         else if(variable == "MAX_LEN")
         {
             connection_max_len = std::stof(line.substr(sign_pos + 1, line.size()));

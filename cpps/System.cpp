@@ -341,6 +341,8 @@ void System::add_connection(unsigned int body_num, float point_x, float point_y,
         this -> add_connection(this -> object_list[body_num - 1], 
                                Vector2{point_x, point_y}, 
                                connection_max_len);
+        
+        return;
     }
     
     std::cerr << "Connection is set between at least one non-existant element\n";
