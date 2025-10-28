@@ -1,13 +1,11 @@
 #include "raylib.h"
 #include "Sphere.h"
 #include "System.h"
+#include "Rect.h"
 
-#include <vector>
 #include <iostream>
+#include <vector>
 #include <string>
-#include <math.h>
-#include <chrono>
-#include <thread>
 #include <fstream>
 #include <algorithm>
 #include <cctype>
@@ -18,22 +16,22 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     std::fstream conf_file(path);
     
     Vector2 acceleration{0, 0};
+    char display_bar = 1;
 
-    bool body_created = false;
-    bool body_point_connection_created = false;
-    bool body_body_connection_created = false;
+    bool sphere_created = false;
+    bool rect_created = false;
+    bool connection_created = false;
     
     float mass = 1;
     float initial_x  = 0;
     float initial_y  = 0;
     float initial_vx = 0;
     float initial_vy = 0;
-    float characteristic_size = 10;
-    Color c = BLUE;        
+    float radius = 10;
+    float width = 10;
+    float height = 10;
     
-    float connection_max_len = 0; // 0 MEAN HARD CONNECTION, -1 MEAN DISTANCE AT THE INNITIALIZATION MOMENT   
-    unsigned int connection_body_num_1 = -1;
-    unsigned int connection_body_num_2 = -1;
+    unsigned int connection_body_num = -1;
     float connection_point_x = 0;
     float connection_point_y = 0;
 
@@ -50,49 +48,71 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
 
         line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
 
-        if(line == "BODY" || line == "BODYCONNECTION" || line == "POINTCONNECTION")
+        if(line == "SPHERE" || 
+           line == "CONNECTION" || 
+           line == "RECTANGLE")
         {
-            if(body_created)
+            if(sphere_created)
             {
                 system -> add_body(new sphere(initial_x, initial_y, 
                                               initial_vx, initial_vy, 
-                                              mass, c, characteristic_size));
-                mass = 1;
-                initial_x  = 0;
-                initial_y  = 0;
-                initial_vx = 0;
-                initial_vy = 0;
-                characteristic_size = 10;
-                c = BLUE;    
+                                              mass, radius));
+                float mass = 1;
+                float initial_x  = 0;
+                float initial_y  = 0;
+                float initial_vx = 0;
+                float initial_vy = 0;
+                float radius = 10;
+                float width = 10;
+                float height = 10;
+    
+                unsigned int connection_body_num = -1;
+                float connection_point_x = 0;
+                float connection_point_y = 0;
             } 
 
-            if(body_body_connection_created)
+            else if(connection_created)
             {
-                system -> add_connection(connection_body_num_1, 
-                                         connection_body_num_2, 
-                                         connection_max_len);
-                
-                connection_max_len = 0;    
-                connection_body_num_1 = -1;
-                connection_body_num_2 = -1;
-            }
-
-            if(body_point_connection_created)
-            {
-                system -> add_connection(connection_body_num_1, 
+                system -> add_connection(connection_body_num, 
                                          connection_point_x, 
-                                         connection_point_y, 
-                                         connection_max_len);
-                
-                connection_max_len = 0;    
-                connection_body_num_1 = -1;
-                connection_point_x = 0;    
-                connection_point_y = 0;    
+                                         connection_point_y);
+                 
+                float mass = 1;
+                float initial_x  = 0;
+                float initial_y  = 0;
+                float initial_vx = 0;
+                float initial_vy = 0;
+                float radius = 10;
+                float width = 10;
+                float height = 10;
+    
+                unsigned int connection_body_num = -1;
+                float connection_point_x = 0;
+                float connection_point_y = 0;    
             }
 
-            body_created = (line == "BODY");
-            body_body_connection_created = (line == "BODYCONNECTION");
-            body_point_connection_created = (line == "POINTCONNECTION");
+            else if(rect_created)
+            {
+                system -> add_body(new Rect(initial_x, initial_y, 
+                                            initial_vx, initial_vy, 
+                                            mass, width, height));
+                float mass = 1;
+                float initial_x  = 0;
+                float initial_y  = 0;
+                float initial_vx = 0;
+                float initial_vy = 0;
+                float radius = 10;
+                float width = 10;
+                float height = 10;
+    
+                unsigned int connection_body_num = -1;
+                float connection_point_x = 0;
+                float connection_point_y = 0;
+            }
+
+            sphere_created = (line == "SPHERE");
+            rect_created = (line == "RECTANGLE"); 
+            connection_created = (line == "CONNECTION");
             continue;
         }
 
@@ -115,6 +135,10 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         {
             acceleration.y = std::stof(line.substr(sign_pos + 1, line.size()));
         }
+        else if(variable == "DISPLAY_BAR")
+        {
+            display_bar = std::stoi(line.substr(sign_pos + 1, line.size()));
+        }
         else if(variable == "MASS")
         {
             mass = std::stof(line.substr(sign_pos + 1, line.size()));
@@ -135,33 +159,21 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         {
             initial_vy = std::stof(line.substr(sign_pos + 1, line.size()));
         }
-        else if(variable == "CHARACTERISTIC_SIZE")
+        else if(variable == "RADIUS")
         {
-            characteristic_size = std::stof(line.substr(sign_pos + 1, line.size()));
+            radius = std::stof(line.substr(sign_pos + 1, line.size()));
         }
-        else if(variable == "COLOR_R")
+        else if(variable == "WIDTH")
         {
-            c.r = std::stoi(line.substr(sign_pos + 1, line.size()));
+            width = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
-        else if(variable == "COLOR_G")
+        else if(variable == "HEIGHT")
         {
-            c.g = std::stoi(line.substr(sign_pos + 1, line.size()));
+            height = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
-        else if(variable == "COLOR_B")
+        else if(variable == "OBJECT_NUM")
         {
-            c.b = std::stoi(line.substr(sign_pos + 1, line.size()));
-        }
-        else if(variable == "COLOR_A")
-        {
-            c.a = std::stoi(line.substr(sign_pos + 1, line.size()));
-        }
-        else if(variable == "OBJECT_NUM_1")
-        {
-            connection_body_num_1 = std::stoi(line.substr(sign_pos + 1, line.size()));
-        }
-        else if(variable == "OBJECT_NUM_2")
-        {
-            connection_body_num_2 = std::stoi(line.substr(sign_pos + 1, line.size()));
+            connection_body_num = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
         else if(variable == "CONNECTION_POINT_X")
         {
@@ -171,10 +183,6 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         {
             connection_point_y = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
-        else if(variable == "MAX_LEN")
-        {
-            connection_max_len = std::stof(line.substr(sign_pos + 1, line.size()));
-        }
         else
         {
             std::cout << "CANT INTERPRET THE VARIABLE NAME ON LINE " << line_counter << '\n';
@@ -182,30 +190,29 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         }
     }
 
-    if(body_created)
+    if(sphere_created)
     {
         system -> add_body(new sphere(initial_x, initial_y, 
                                       initial_vx, initial_vy, 
-                                      mass, c, characteristic_size));
+                                      mass, radius));
     }
-
-    if(body_body_connection_created)
+    else if(rect_created)
     {
-        system -> add_connection(connection_body_num_1, 
-                                 connection_body_num_2, 
-                                 connection_max_len);
+        system -> add_body(new Rect(initial_x, initial_y, 
+                                    initial_vx, initial_vy, 
+                                    mass, width, height));
     }
-
-    if(body_point_connection_created)
+    else if(connection_created)
     {
-        system -> add_connection(connection_body_num_1, 
+        system -> add_connection(connection_body_num, 
                                  connection_point_x, 
-                                 connection_point_y, 
-                                 connection_max_len);  
+                                 connection_point_y);  
     }
-    
+
     system -> set_global_acceleration(acceleration);
+    system -> set_gradient_system(display_bar);
 }
+
 
 int main() {
     InitWindow(1280, 720, "Shapes");

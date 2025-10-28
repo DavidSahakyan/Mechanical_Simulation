@@ -3,20 +3,17 @@
 
 object::object(const float& x, const float& y, 
                const float& vx,const float& vy, 
-               const float& m, const Color& color) : coord({x, y}),
-                                                     speed({vx, vy}), 
-                                                     mass(m),
-                                                     col(color) 
+               const float& m) : coord({x, y}),
+                                 speed({vx, vy}), 
+                                 mass(m)
 {
 }
 
 object::object(const Vector2& coord, 
                const Vector2& vel, 
-               const float& m, 
-               const Color& color) : coord(coord),
-                                     speed(vel), 
-                                     mass(m),
-                                     col(color) 
+               const float& m) : coord(coord),
+                                 speed(vel), 
+                                 mass(m) 
 {
 }
 
@@ -50,10 +47,10 @@ void object::set_vel(const Vector2& vel)
 
 void object::move(float dt)
 {
-    this -> calculate_acceleration();
     this -> speed.x += this -> acceleration.x * dt;
     this -> speed.y += this -> acceleration.y * dt;
-
+    
+    this -> calculate_acceleration();
     this -> coord.x += this -> speed.x * dt;
     this -> coord.y += this -> speed.y * dt;
 }
@@ -81,4 +78,9 @@ const float& object::get_mass()
 const Vector2& object::get_vel()
 {
     return this -> speed;
+}
+
+void object::set_color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha)
+{
+    this -> col = {r, g, b, alpha};
 }

@@ -6,7 +6,12 @@ void sphere::display()
     DrawCircle(temp.x, temp.y, rad, object::get_color());
 }
 
-float sphere::get_characteristic_size() 
+float sphere::get_width() 
 {
-    return this -> rad;
+    return 2 * this -> rad;
+}
+
+float sphere::get_height()
+{
+    return 2 * this -> rad;
 }

@@ -151,9 +151,12 @@ void System::update_system()
         this -> object_list[i] -> set_force(0, 0);
     }
     
-    handle_collisions();
-    calculate_local_gravitational_forces();
-    calculate_global_gravitational_forces();
+    this -> handle_collisions();
+    this -> calculate_local_gravitational_forces();
+    this -> calculate_global_gravitational_forces();
+    this -> handle_connections();
+    this -> set_gradient();
+    this -> draw_display_bar();
     
     for(int i = 0; i < this -> object_list.size(); ++i)
     {
@@ -161,8 +164,6 @@ void System::update_system()
         this -> object_list[i] -> display();
     }
     
-    // std::cout << this -> connection_list.size(); 
-
     for(int i = 0; i < this -> connection_list.size(); ++i)
     {
         this -> connection_list[i] -> display();
@@ -178,26 +179,26 @@ void System::handle_collisions()
 {
     for(int i = 0; i < this -> object_list.size(); ++i)
     {
-        if(this -> object_list[i] -> get_coord().x + this -> object_list[i] -> get_characteristic_size() >= GetMonitorWidth(0))
+        if(this -> object_list[i] -> get_coord().x + this -> object_list[i] -> get_width() / 2 >= GetMonitorWidth(0))
         {
             this -> object_list[i] -> set_vel(-abs(this -> object_list[i] -> get_vel().x), 
                                                    this -> object_list[i] -> get_vel().y);
             ++this -> collision_number;
         } 
-        else if(this -> object_list[i] -> get_coord().x - this -> object_list[i] -> get_characteristic_size() <= 0)
+        else if(this -> object_list[i] -> get_coord().x - this -> object_list[i] -> get_width() / 2 <= 0)
         {
             this -> object_list[i] -> set_vel(abs(this -> object_list[i] -> get_vel().x), 
                                                   this -> object_list[i] -> get_vel().y);
             ++this -> collision_number;
         }
 
-        if(this -> object_list[i] -> get_coord().y + this -> object_list[i] -> get_characteristic_size() >= GetMonitorHeight(0))
+        if(this -> object_list[i] -> get_coord().y + this -> object_list[i] -> get_height() / 2 >= GetMonitorHeight(0))
         {
             this -> object_list[i] -> set_vel(this -> object_list[i] -> get_vel().x, 
                                          -abs(this -> object_list[i] -> get_vel().y));
             ++this -> collision_number;
         }
-        else if(this -> object_list[i] -> get_coord().y - this -> object_list[i] -> get_characteristic_size() <= 0)
+        else if(this -> object_list[i] -> get_coord().y - this -> object_list[i] -> get_height() / 2 <= 0)
         {
             this -> object_list[i] -> set_vel(this -> object_list[i] -> get_vel().x, 
                                           abs(this -> object_list[i] -> get_vel().y));
@@ -210,11 +211,18 @@ void System::handle_collisions()
         }
         for (int j = i + 1; j < this -> object_list.size(); ++j)
         {
-            float dist = calculate_distance(this -> object_list[i] -> get_coord(), 
-                                            this -> object_list[j] -> get_coord()); 
+            float dist_x = abs(this -> object_list[i] -> get_coord().x - 
+                               this -> object_list[j] -> get_coord().x); 
             
-            if(dist <= this -> object_list[i] -> get_characteristic_size() + 
-                       this -> object_list[j] -> get_characteristic_size())
+            float dist_y = abs(this -> object_list[i] -> get_coord().y - 
+                               this -> object_list[j] -> get_coord().y);
+
+            float dist = sqrt(dist_x * dist_x + dist_y * dist_y);
+            
+            if(dist_x <= (this -> object_list[i] -> get_width() / 2 + 
+                          this -> object_list[j] -> get_width() / 2) &&
+               dist_y <= (this -> object_list[i] -> get_height() / 2 + 
+                          this -> object_list[j] -> get_height() / 2))
             {
                 float cos_i = (this -> object_list[i] -> get_coord().x -
                                this -> object_list[j] -> get_coord().x) / dist;  
@@ -238,7 +246,7 @@ void System::handle_collisions()
                              this -> object_list[j] -> get_vel().y * sin_j;   
 
                 float vt_j = this -> object_list[j] -> get_vel().y * cos_j - 
-                            this -> object_list[j] -> get_vel().x * sin_j;
+                             this -> object_list[j] -> get_vel().x * sin_j;
 
                 float vn_i_after_collision = -(2 * (this -> object_list[j] -> get_mass()) / 
                                                    (this -> object_list[j] -> get_mass() + 
@@ -281,23 +289,33 @@ bool System::check_validity(object* obj)
 {
     if(obj -> get_mass() < 0)
     {
-        std::cerr << "Body has negative mass parameter\n";
+        std::cerr << "Body No " << this -> object_list.size() << "has negative mass parameter\n";
         return false;
     }
 
-    if(obj -> get_coord().x < obj -> get_characteristic_size() || 
-       obj -> get_coord().y < obj -> get_characteristic_size() || 
-       obj -> get_coord().x > GetScreenWidth() - obj-> get_characteristic_size() || 
-       obj -> get_coord().x > GetScreenWidth() - obj-> get_characteristic_size())
+    if(obj -> get_coord().x < obj -> get_width() / 2 || 
+       obj -> get_coord().y < obj -> get_height()/ 2 || 
+       obj -> get_coord().x > GetMonitorWidth(0)  - obj-> get_width() /2  || 
+       obj -> get_coord().y > GetMonitorHeight(0) - obj-> get_height()/2)
     {
-        std::cerr << "Body No " << this -> object_list.size() << " is initialized in the wall\n";
+        std::cerr << "Body No " << this -> object_list.size() - 1 << " is initialized in the wall\n";
         return false;
     }
 
     for(int i = 0; i < this -> object_list.size(); ++i)
     {
-        if(calculate_distance(this -> object_list[i] -> get_coord(), obj -> get_coord()) < 
-                              this -> object_list[i] -> get_characteristic_size() + obj -> get_characteristic_size())
+        float dist_x = abs(this -> object_list[i] -> get_coord().x - 
+                           obj -> get_coord().x); 
+            
+        float dist_y = abs(this -> object_list[i] -> get_coord().y - 
+                           obj -> get_coord().y);
+
+        float dist = sqrt(dist_x * dist_x + dist_y * dist_y);
+            
+        if(dist_x < (this -> object_list[i] -> get_width() / 2 + 
+                                        obj -> get_width() / 2) &&
+           dist_y < (this -> object_list[i] -> get_height() / 2 + 
+                                        obj -> get_height() / 2))
         {
             std::cerr << "Body No " << this -> object_list.size() << " is initialized inside the body No " << i << '\n';
             return false;
@@ -307,40 +325,18 @@ bool System::check_validity(object* obj)
     return true;
 }
 
-void System::add_connection(object* obj1, object* obj2, float max_len)
+void System::add_connection(object* obj1, Vector2 point)
 {
-    Connection* temp_connection = new Connection(obj1, obj2, max_len);
+    Connection* temp_connection = new Connection(obj1, point);
     this -> connection_list.push_back(temp_connection);
 }
 
-void System::add_connection(object* obj1, Vector2 point, float max_len)
-{
-    Connection* temp_connection = new Connection(obj1, point, max_len);
-    this -> connection_list.push_back(temp_connection);
-}
-
-void System::add_connection(unsigned int body_num_1, unsigned int body_num_2, float connection_max_len)
-{
-    if(object_list.size() >= body_num_1 && 
-       object_list.size() >= body_num_2)
-    {
-        this -> add_connection(this -> object_list[body_num_1 - 1], 
-                               this -> object_list[body_num_2 - 1],
-                               connection_max_len);
-            
-        return;    
-    }
-
-    std::cerr << "Connection is set between at least one non-existant element\n";
-}
-
-void System::add_connection(unsigned int body_num, float point_x, float point_y, float connection_max_len)
+void System::add_connection(unsigned int body_num, float point_x, float point_y)
 {
     if(object_list.size() >= body_num)
     {
         this -> add_connection(this -> object_list[body_num - 1], 
-                               Vector2{point_x, point_y}, 
-                               connection_max_len);
+                               Vector2{point_x, point_y});
         
         return;
     }
@@ -348,7 +344,99 @@ void System::add_connection(unsigned int body_num, float point_x, float point_y,
     std::cerr << "Connection is set between at least one non-existant element\n";
 }
 
+void System::set_gradient()
+{
+    this -> max_force_sqr = -std::numeric_limits<float>::infinity();
+    this -> max_vel_sqr   = -std::numeric_limits<float>::infinity();
+    this -> min_force_sqr =  std::numeric_limits<float>::infinity();
+    this -> min_vel_sqr   =  std::numeric_limits<float>::infinity();
+
+
+    for(auto i : object_list)
+    {
+
+        float temp_vel_sqr = (i -> get_vel().x * i -> get_vel().x) + 
+                             (i -> get_vel().y * i -> get_vel().y);
+
+        float temp_force_sqr = (i -> get_force().x * i -> get_force().x) + 
+                               (i -> get_force().y * i -> get_force().y);
+                             
+        if(temp_vel_sqr > max_vel_sqr)
+        {
+            max_vel_sqr = temp_vel_sqr;
+        }
+        if(temp_vel_sqr < min_vel_sqr)
+        {
+            min_vel_sqr = temp_vel_sqr;
+        }
+
+        if(temp_force_sqr > max_force_sqr)
+        {
+            max_force_sqr = temp_force_sqr;
+        }
+        if(temp_force_sqr < min_force_sqr)
+        {
+            min_force_sqr = temp_force_sqr;
+        }
+    }
+
+    for(auto i : object_list)
+    {
+        if(this -> display_bar == 1)
+        {
+            float vel = ((i -> get_vel().x * i -> get_vel().x) + 
+                         (i -> get_vel().y * i -> get_vel().y));
+                            
+            unsigned char color = ((vel - min_vel_sqr) / (max_vel_sqr - min_vel_sqr)) * 254;  
+            
+            i -> set_color(color, 228, 48, 255);
+        }
+        else if(this -> display_bar == 2)
+        {
+            float f = ((i -> get_force().x * i -> get_force().x) + 
+                       (i -> get_force().y * i -> get_force().y));
+                            
+            unsigned char color = ((f - min_force_sqr) / (max_force_sqr - min_force_sqr)) * 254;
+            
+            i -> set_color(color, 228, 48, 255);
+        }
+    }
+}
+
+void System::set_gradient_system(char system_name)
+{
+    this -> display_bar = system_name;
+}
+
+void System::draw_display_bar()
+{
+    DrawRectangleGradientV(GetMonitorWidth(0) * 0.9,  GetMonitorHeight(0) * 0.1, 
+                           GetMonitorWidth(0) * 0.005, GetMonitorHeight(0) * 0.7, 
+                           {255, 228, 48, 255},  {0, 228, 48, 255});
+
+    if(this -> display_bar == 1)
+    {
+        DrawText("|VELOCITY|", GetMonitorWidth(0) * 0.84,  GetMonitorHeight(0) * 0.05, 50, RED);
+        DrawText(std::to_string(sqrt(this-> max_vel_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.1, 20, {255, 228, 48, 255});
+        DrawText(std::to_string(sqrt(this-> min_vel_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.78, 20, {0, 228, 48, 255});
+    }
+    else if(this -> display_bar == 2)
+    {
+        DrawText("|FORCE|", GetMonitorWidth(0) * 0.84,  GetMonitorHeight(0) * 0.05, 50, RED);
+        DrawText(std::to_string(sqrt(this-> max_force_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.1, 20, {255, 228, 48, 255});
+        DrawText(std::to_string(sqrt(this-> min_force_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.78, 20, {0, 228, 48, 255});
+    }
+}
+
 void System::handle_connections()
 {
-
+    for(auto i : this -> connection_list)
+    {   
+        float v_tang = i -> get_object() -> get_vel().x * i -> sin_with_x() +
+                       i -> get_object() -> get_vel().y * i -> cos_with_x();
+        
+        i -> get_object() -> set_vel(v_tang * i -> sin_with_x(),         
+                                     v_tang * i -> cos_with_x());
+         
+    }
 }
