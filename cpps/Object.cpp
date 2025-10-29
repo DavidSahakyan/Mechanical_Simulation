@@ -3,17 +3,19 @@
 
 object::object(const float& x, const float& y, 
                const float& vx,const float& vy, 
-               const float& m) : coord({x, y}),
-                                 speed({vx, vy}), 
-                                 mass(m)
+               const float& m, const int& charge) : coord({x, y}),
+                                                    speed({vx, vy}), 
+                                                    mass(m),
+                                                    charge(charge)
 {
 }
 
 object::object(const Vector2& coord, 
                const Vector2& vel, 
-               const float& m) : coord(coord),
-                                 speed(vel), 
-                                 mass(m) 
+               const float& m, const int& charge) : coord(coord),
+                                                    speed(vel), 
+                                                    mass(m),
+                                                    charge(charge) 
 {
 }
 
@@ -83,4 +85,9 @@ const Vector2& object::get_vel()
 void object::set_color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha)
 {
     this -> col = {r, g, b, alpha};
+}
+
+const int& object::get_charge()
+{
+    return this -> charge;
 }

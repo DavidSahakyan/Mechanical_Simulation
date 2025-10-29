@@ -16,7 +16,8 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     std::fstream conf_file(path);
     
     Vector2 acceleration{0, 0};
-    char display_bar = 1;
+    Vector2 el_field{0, 0};
+    std::string display_bar = "VELOCITY";
 
     bool sphere_created = false;
     bool rect_created = false;
@@ -28,6 +29,7 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     float initial_vx = 0;
     float initial_vy = 0;
     float radius = 10;
+    int charge = 0;
     float width = 10;
     float height = 10;
     
@@ -56,19 +58,20 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
             {
                 system -> add_body(new sphere(initial_x, initial_y, 
                                               initial_vx, initial_vy, 
-                                              mass, radius));
-                float mass = 1;
-                float initial_x  = 0;
-                float initial_y  = 0;
-                float initial_vx = 0;
-                float initial_vy = 0;
-                float radius = 10;
-                float width = 10;
-                float height = 10;
+                                              mass, charge, radius));
+                mass = 1;
+                initial_x  = 0;
+                initial_y  = 0;
+                initial_vx = 0;
+                initial_vy = 0;
+                radius = 10;
+                charge = 0;
+                width = 10;
+                height = 10;
     
-                unsigned int connection_body_num = -1;
-                float connection_point_x = 0;
-                float connection_point_y = 0;
+                connection_body_num = -1;
+                connection_point_x = 0;
+                connection_point_y = 0;
             } 
 
             else if(connection_created)
@@ -77,37 +80,39 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
                                          connection_point_x, 
                                          connection_point_y);
                  
-                float mass = 1;
-                float initial_x  = 0;
-                float initial_y  = 0;
-                float initial_vx = 0;
-                float initial_vy = 0;
-                float radius = 10;
-                float width = 10;
-                float height = 10;
+                mass = 1;
+                initial_x  = 0;
+                initial_y  = 0;
+                initial_vx = 0;
+                initial_vy = 0;
+                radius = 10;
+                charge = 0;
+                width = 10;
+                height = 10;
     
-                unsigned int connection_body_num = -1;
-                float connection_point_x = 0;
-                float connection_point_y = 0;    
+                connection_body_num = -1;
+                connection_point_x = 0;
+                connection_point_y = 0;    
             }
 
             else if(rect_created)
             {
                 system -> add_body(new Rect(initial_x, initial_y, 
                                             initial_vx, initial_vy, 
-                                            mass, width, height));
-                float mass = 1;
-                float initial_x  = 0;
-                float initial_y  = 0;
-                float initial_vx = 0;
-                float initial_vy = 0;
-                float radius = 10;
-                float width = 10;
-                float height = 10;
+                                            mass, charge, width, height));
+                mass = 1;
+                initial_x  = 0;
+                initial_y  = 0;
+                initial_vx = 0;
+                initial_vy = 0;
+                radius = 10;
+                charge = 0;
+                width = 10;
+                height = 10;
     
-                unsigned int connection_body_num = -1;
-                float connection_point_x = 0;
-                float connection_point_y = 0;
+                connection_body_num = -1;
+                connection_point_x = 0;
+                connection_point_y = 0;
             }
 
             sphere_created = (line == "SPHERE");
@@ -135,9 +140,17 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         {
             acceleration.y = std::stof(line.substr(sign_pos + 1, line.size()));
         }
+        else if(variable == "GLOBAL_ELECTRIC_FIELD_X")
+        {
+            el_field.x = std::stof(line.substr(sign_pos + 1, line.size()));
+        }
+        else if(variable == "GLOBAL_ELECTRIC_FIELD_Y")
+        {
+            el_field.y = std::stof(line.substr(sign_pos + 1, line.size()));
+        }
         else if(variable == "DISPLAY_BAR")
         {
-            display_bar = std::stoi(line.substr(sign_pos + 1, line.size()));
+            display_bar = line.substr(sign_pos + 1, line.size());
         }
         else if(variable == "MASS")
         {
@@ -158,6 +171,10 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
         else if(variable == "INITIAL_VY")
         {
             initial_vy = std::stof(line.substr(sign_pos + 1, line.size()));
+        }
+        else if(variable == "CHARGE")
+        {
+            charge = std::stoi(line.substr(sign_pos + 1, line.size()));
         }
         else if(variable == "RADIUS")
         {
@@ -194,13 +211,13 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     {
         system -> add_body(new sphere(initial_x, initial_y, 
                                       initial_vx, initial_vy, 
-                                      mass, radius));
+                                      mass, charge, radius));
     }
     else if(rect_created)
     {
         system -> add_body(new Rect(initial_x, initial_y, 
                                     initial_vx, initial_vy, 
-                                    mass, width, height));
+                                    mass, charge, width, height));
     }
     else if(connection_created)
     {
@@ -210,6 +227,7 @@ void init_system_from_config_file(std::string path = CONFIG_FILE_PATH)
     }
 
     system -> set_global_acceleration(acceleration);
+    system -> set_global_electric_field(el_field);
     system -> set_gradient_system(display_bar);
 }
 

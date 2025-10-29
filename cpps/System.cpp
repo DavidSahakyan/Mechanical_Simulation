@@ -45,6 +45,15 @@ void System::set_global_acceleration(const float& acceleration_x, const float& a
     this -> global_acceleration = Vector2{acceleration_x, acceleration_y};
 }
 
+void System::set_global_electric_field(const float& el_field_x, const float& el_field_y)
+{
+    this -> global_el_field = Vector2{el_field_x, el_field_y};
+}
+
+void System::set_global_electric_field(const Vector2& el_field)
+{
+    this -> global_el_field = el_field;
+}
 
 System* System::get_singleton()
 {
@@ -122,6 +131,73 @@ void System::calculate_local_gravitational_forces()
     }
 }
 
+void System::calculate_local_electric_forces()
+{
+    float el_mag_force = 0;
+   
+    for(int i = 0; i < this -> object_list.size() - 1; ++i)
+    {
+        for(int j = i + 1; j < this -> object_list.size(); ++j)
+        {
+            el_mag_force = -(this -> object_list[i] -> get_charge() * this -> object_list[j] -> get_charge()) /
+                            (this -> calculate_distance(this -> object_list[i] -> get_coord(), this -> object_list[j] -> get_coord()) * 
+                             this -> calculate_distance(this -> object_list[i] -> get_coord(), this -> object_list[j] -> get_coord()));
+            
+            float el_mag_force_x_comp = el_mag_force * this -> calculate_cos_with_horizon(this -> object_list[i] -> get_coord(), 
+                                                                                          this -> object_list[j] -> get_coord());
+                                                                              
+            float el_mag_force_y_comp = el_mag_force * this -> calculate_sin_with_horizon(this -> object_list[i] -> get_coord(), 
+                                                                                          this -> object_list[j] -> get_coord());
+
+            if(this -> object_list[i] -> get_coord().x <= this -> object_list[j] -> get_coord().x &&
+               this -> object_list[i] -> get_coord().y <= this -> object_list[j] -> get_coord().y)
+            {
+                this -> object_list[i] -> set_force(this -> object_list[i] -> get_force().x + el_mag_force_x_comp,
+                                                    this -> object_list[i] -> get_force().y + el_mag_force_y_comp);
+
+                this -> object_list[j] -> set_force(this -> object_list[j] -> get_force().x - el_mag_force_x_comp,
+                                                    this -> object_list[j] -> get_force().y - el_mag_force_y_comp);
+            }
+            else if(this -> object_list[i] -> get_coord().x >= this -> object_list[j] -> get_coord().x &&
+                    this -> object_list[i] -> get_coord().y <= this -> object_list[j] -> get_coord().y)
+            {
+                this -> object_list[i] -> set_force(this -> object_list[i] -> get_force().x - el_mag_force_x_comp, 
+                                                    this -> object_list[i] -> get_force().y + el_mag_force_y_comp);
+            
+                this -> object_list[j] -> set_force(this -> object_list[j] -> get_force().x + el_mag_force_x_comp, 
+                                                    this -> object_list[j] -> get_force().y - el_mag_force_y_comp);    
+            }
+            else if(this -> object_list[i] -> get_coord().x <= this -> object_list[j] -> get_coord().x &&
+                    this -> object_list[i] -> get_coord().y >= this -> object_list[j] -> get_coord().y)
+            {
+                this -> object_list[i] -> set_force(this -> object_list[i] -> get_force().x + el_mag_force_x_comp, 
+                                                    this -> object_list[i] -> get_force().y - el_mag_force_y_comp);
+            
+                this -> object_list[j] -> set_force(this -> object_list[j] -> get_force().x - el_mag_force_x_comp, 
+                                                    this -> object_list[j] -> get_force().y + el_mag_force_y_comp);    
+            }
+            else if(this -> object_list[i] -> get_coord().x >= this -> object_list[j] -> get_coord().x &&
+                    this -> object_list[i] -> get_coord().y >= this -> object_list[j] -> get_coord().y)
+            {
+                this -> object_list[i] -> set_force(this -> object_list[i] -> get_force().x - el_mag_force_x_comp, 
+                                                    this -> object_list[i] -> get_force().y - el_mag_force_y_comp);
+        
+                this -> object_list[j] -> set_force(this -> object_list[j] -> get_force().x + el_mag_force_x_comp, 
+                                                    this -> object_list[j] -> get_force().y + el_mag_force_y_comp);    
+            }                                                                 
+        }
+    }
+}
+
+void System::calculate_global_electric_field_forces()
+{
+    for(int i = 0; i < this -> object_list.size(); ++i)
+    {
+        this -> object_list[i] -> set_force(this -> object_list[i] -> get_force().x + this -> object_list[i] -> get_charge() * this -> global_el_field.x, 
+                                            this -> object_list[i] -> get_force().y + this -> object_list[i] -> get_charge() * this -> global_el_field.y);
+    }
+}
+
 float System::calculate_cos_with_horizon(const Vector2& point1, const Vector2& point2)
 {
     float x_dist = abs(point1.x - point2.x);
@@ -154,6 +230,8 @@ void System::update_system()
     this -> handle_collisions();
     this -> calculate_local_gravitational_forces();
     this -> calculate_global_gravitational_forces();
+    this -> calculate_local_electric_forces();
+    this -> calculate_global_electric_field_forces();
     this -> handle_connections();
     this -> set_gradient();
     this -> draw_display_bar();
@@ -382,7 +460,7 @@ void System::set_gradient()
 
     for(auto i : object_list)
     {
-        if(this -> display_bar == 1)
+        if(this -> display_bar == "VELOCITY")
         {
             float vel = ((i -> get_vel().x * i -> get_vel().x) + 
                          (i -> get_vel().y * i -> get_vel().y));
@@ -391,7 +469,7 @@ void System::set_gradient()
             
             i -> set_color(color, 228, 48, 255);
         }
-        else if(this -> display_bar == 2)
+        else if(this -> display_bar == "FORCE")
         {
             float f = ((i -> get_force().x * i -> get_force().x) + 
                        (i -> get_force().y * i -> get_force().y));
@@ -403,7 +481,7 @@ void System::set_gradient()
     }
 }
 
-void System::set_gradient_system(char system_name)
+void System::set_gradient_system(std::string system_name)
 {
     this -> display_bar = system_name;
 }
@@ -414,13 +492,13 @@ void System::draw_display_bar()
                            GetMonitorWidth(0) * 0.005, GetMonitorHeight(0) * 0.7, 
                            {255, 228, 48, 255},  {0, 228, 48, 255});
 
-    if(this -> display_bar == 1)
+    if(this -> display_bar == "VELOCITY")
     {
         DrawText("|VELOCITY|", GetMonitorWidth(0) * 0.84,  GetMonitorHeight(0) * 0.05, 50, RED);
         DrawText(std::to_string(sqrt(this-> max_vel_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.1, 20, {255, 228, 48, 255});
         DrawText(std::to_string(sqrt(this-> min_vel_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.78, 20, {0, 228, 48, 255});
     }
-    else if(this -> display_bar == 2)
+    else if(this -> display_bar == "FORCE")
     {
         DrawText("|FORCE|", GetMonitorWidth(0) * 0.84,  GetMonitorHeight(0) * 0.05, 50, RED);
         DrawText(std::to_string(sqrt(this-> max_force_sqr)).c_str(), GetMonitorWidth(0) * 0.91, GetMonitorHeight(0) * 0.1, 20, {255, 228, 48, 255});

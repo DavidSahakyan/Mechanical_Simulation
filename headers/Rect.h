@@ -9,12 +9,12 @@ class Rect : public object
 public:
     Rect(const float& x,  const float& y, 
          const float& vx, const float& vy,
-         const float& m,  
+         const float& m,  const int& charge,
          const float& width, const float& height);
 
     Rect(const Vector2& coord, 
          const Vector2& vel, 
-         const float& m, 
+         const float& m, const int& charge, 
          const float& width, const float& height);
     
     float get_width() override;

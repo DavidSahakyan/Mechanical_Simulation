@@ -5,6 +5,7 @@
 #include "Connection.h"
 
 #include <vector>
+#include <string>
 #include <cstdint>
 
 class System{
@@ -19,21 +20,24 @@ public:
     
     void set_global_acceleration(const Vector2& acceleration);
     void set_global_acceleration(const float& acceleration_x, const float& acceleration_y);
-    
-    void set_gradient_system(char);
+    void set_global_electric_field(const Vector2& el_field);
+    void set_global_electric_field(const float& el_field_x, const float& el_field_y);
+
+
+    void set_gradient_system(std::string);
     
     void update_system();    
     uint64_t get_collision_number();
     
-    private:
+private:
     
     void add_connection(object* obj_1, Vector2 point);
     
     void calculate_forces();
     void calculate_local_gravitational_forces();
-    void calculate_local_electromagnetic_forces();
+    void calculate_local_electric_forces();
     void calculate_global_gravitational_forces();
-    void calculate_global_electromagnetic_field_forces();
+    void calculate_global_electric_field_forces();
     
     void handle_collisions();    
     void handle_connections();
@@ -51,7 +55,7 @@ public:
     std::vector<object*> object_list = {};
     std::vector<Connection*> connection_list = {};
     
-    char display_bar = 1;
+    std::string display_bar = "VELOCITY";
     void draw_display_bar();
     void set_gradient();
     float min_vel_sqr = 0.0;
@@ -60,6 +64,7 @@ public:
     float max_force_sqr = 0.0;
 
     Vector2 global_acceleration = {0, 0};
+    Vector2 global_el_field = {0, 0};
     const float dt = 0.001;
     uint64_t collision_number = 0;
 };
